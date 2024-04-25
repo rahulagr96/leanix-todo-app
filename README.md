@@ -43,24 +43,24 @@ project
 
 ## Pipelines
 
-1. `infra-init`  
+1. `infra-init` [![Infra Init](https://github.com/rahulagr96/leanix-todo-app/actions/workflows/infra-init.yml/badge.svg?branch=main)](https://github.com/rahulagr96/leanix-todo-app/actions/workflows/infra-init.yml)
    - **Triggers:** manual
    - Creates a `leanixgeneric-rg` resource group and contains a storage account that stores all `tfstate` files (multiple environments)
-2. `infra-app`
+2. `infra-app` [![Infra App](https://github.com/rahulagr96/leanix-todo-app/actions/workflows/infra-app.yml/badge.svg?branch=main)](https://github.com/rahulagr96/leanix-todo-app/actions/workflows/infra-app.yml)
    - **Triggers:** manual
    - Creates an environment specific resource group, that contains a `web_app` and `mssql_server` with a database.
-3. `infra-app-destroy`
-   - **Triggers:** manual
+3. `infra-app-destroy` [![Infra App - Destroy](https://github.com/rahulagr96/leanix-todo-app/actions/workflows/infra-app-destroy.yml/badge.svg?branch=main)](https://github.com/rahulagr96/leanix-todo-app/actions/workflows/infra-app-destroy.yml)
+   - **Triggers:** manual 
    - Destroys an environment using terraform.
-4. `todo-release-prd`
+4. `todo-release-prd` [![todo-release-prd](https://github.com/rahulagr96/leanix-todo-app/actions/workflows/app-release-prd.yml/badge.svg?branch=main)](https://github.com/rahulagr96/leanix-todo-app/actions/workflows/app-release-prd.yml)
    - **Triggers:** push(main)
    - builds the microservice
    - deploys the microservice in `prd` env
-5. `todo-manual-deploy`
+5. `todo-manual-deploy` [![todo-manual-deploy](https://github.com/rahulagr96/leanix-todo-app/actions/workflows/app-release-manual.yml/badge.svg?branch=main)](https://github.com/rahulagr96/leanix-todo-app/actions/workflows/app-release-manual.yml)
    - **Triggers:** manual
    - builds the microservice
    - deploys the microservice on any env
-6. `infra-test`
+6. `infra-test` [![Todo App Test](https://github.com/rahulagr96/leanix-todo-app/actions/workflows/infra-test.yml/badge.svg?branch=main)](https://github.com/rahulagr96/leanix-todo-app/actions/workflows/infra-test.yml)
    - Performs CRUD operation to test the application
 
 ## Prerequisites
