@@ -38,7 +38,9 @@ project
 
 - Start `infra-init.yml` pipeline
 - Start `infra-app.yml` pipeline to create the desired environment
-- Start `todo-release-prd` pipeline to build and deploy the application.
+- Deploy (any one approach)
+   - Start `todo-manual-deploy` pipeline to build and deploy the application.
+   - Push a change in `microservice` folder, `todo-release-prd` is trigger automatically.
 - Test the app's CRUD operation using curl (refer to the `infra-test.yml` pipeline).
 
 ## Pipelines
