@@ -1,0 +1,67 @@
+name: Infra App
+
+# Trigger the workflow manually
+on:
+  workflow_dispatch:
+    inputs:  
+      environment:
+        description: Select the environment
+        type: choice
+        default: prd
+        options:
+          - prd
+      dryrun:
+        description: Dry-run
+        type: boolean
+        default: true
+
+jobs:
+  infra_app:
+    name: Infra App - ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+
+    # Set environment variables
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+    defaults:
+      run:
+        shell: bash
+    
+    steps:
+    # Checkout the repository code
+    - name: Checkout code
+      uses: actions/checkout@v2
+      
+    # Setup Terraform
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.8.0
+
+    # Initialize Terraform
+    - name: Terraform Init
+      working-directory: terraform/infra-app
+      run: terraform init -backend-config="key=${{ inputs.environment }}-terraform.tfstate"
+  
+    # Generate Terraform plan
+    - name: Terraform Plan
+      id: plan
+      working-directory: terraform/infra-app
+      run: terraform plan -out tfplan -var env=${{ inputs.environment }} -var administrator_login=${{ secrets.AZURE_DB_LOGIN_ID }} -var administrator_login_password=${{ secrets.AZURE_DB_LOGIN_PASS }}
+    
+    # Save Terraform plan as artifact
+    - name: Save Terraform Plan
+      uses: actions/upload-artifact@v2
+      with:
+        name: terraform-plan-${{ inputs.environment }}
+        path: terraform/infra-app/tfplan
+        
+    # Apply Terraform changes (if not a dry run)
+    - name: Terraform Apply
+      if: ${{ inputs.dryrun == false }}
+      working-directory: terraform/infra-app
+      run: terraform apply -auto-approve -var env=${{ inputs.environment }} -var administrator_login=${{ secrets.AZURE_DB_LOGIN_ID }} -var administrator_login_password=${{ secrets.AZURE_DB_LOGIN_PASS }}

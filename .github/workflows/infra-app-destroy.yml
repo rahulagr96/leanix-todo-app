@@ -1,0 +1,50 @@
+name: Infra App - Destroy
+
+# Trigger the workflow manually
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Select the environment
+        type: choice
+        default: prd
+        options:
+          - prd
+
+jobs:
+  infra_app_destroy:
+    name: Terraform Destroy
+    runs-on: ubuntu-latest
+
+    # Set environment variables
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+    defaults:
+      run:
+        shell: bash
+    
+    steps:
+    # Checkout the repository code
+    - name: Checkout code
+      uses: actions/checkout@v2
+      
+    # Setup Terraform
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.8.0
+
+    # Initialize Terraform
+    - name: Terraform Init
+      working-directory: terraform/infra-app
+      run: terraform init -backend-config="key=${{ inputs.environment }}-terraform.tfstate"
+  
+    # Destroy infrastructure using Terraform
+    - name: Terraform Destroy
+      id: destroy
+      working-directory: terraform/infra-app
+      run: terraform destroy -auto-approve -var env=${{ inputs.environment }} -var administrator_login=${{ secrets.AZURE_DB_LOGIN_ID }} -var administrator_login_password=${{ secrets.AZURE_DB_LOGIN_PASS }}

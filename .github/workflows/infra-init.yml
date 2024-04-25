@@ -1,0 +1,68 @@
+name: Infra Init
+
+# Trigger the workflow manually
+on:
+  workflow_dispatch:
+
+jobs:
+  infra_init:
+    name: Infra Init
+    runs-on: ubuntu-latest
+
+    # Set environment variables
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+    defaults:
+      run:
+        shell: bash
+    
+    steps:
+    # Checkout the repository code
+    - name: Checkout code
+      uses: actions/checkout@v2
+      
+    # Setup Terraform
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.8.0
+
+    # Initialize Terraform
+    - name: Terraform Init
+      working-directory: terraform/infra-init
+      run: terraform init 
+
+    # Generate Terraform plan
+    - name: Terraform Plan
+      id: plan
+      working-directory: terraform/infra-init
+      run: terraform plan -out tfplan 
+    
+    # Save Terraform plan as artifact
+    - name: Save Terraform Plan
+      uses: actions/upload-artifact@v2
+      with:
+        name: terraform-plan
+        path: terraform/infra-init/tfplan
+        
+    # Apply Terraform changes
+    - name: Terraform Apply
+      working-directory: terraform/infra-init
+      run: terraform apply -auto-approve 
+
+    # Save Terraform state as artifact
+    - name: Save Terraform Tfstate
+      uses: actions/upload-artifact@v2
+      with:
+        name: terraform-state
+        path: terraform/infra-init/terraform.tfstate
+
+    # Uncomment this section if you want to include a destroy step
+    # - name: Terraform Destroy
+    #   id: destroy
+    #   working-directory: terraform/infra-init
+    #   run: terraform destroy -auto-approve -var subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }} -var client_id=${{ secrets.AZURE_CLIENT_ID }} -var client_secret=${{ secrets.AZURE_CLIENT_SECRET }} -var tenant_id=${{ secrets.AZURE_TENANT_ID }}

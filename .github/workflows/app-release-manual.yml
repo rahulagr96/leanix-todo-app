@@ -1,0 +1,112 @@
+name: todo-manual-deploy
+
+# Trigger the workflow manually (in future add more env)
+on:
+  workflow_dispatch:
+    inputs:  
+      environment:
+        description: Select the environment
+        type: choice
+        default: prd
+        options:
+          - prd
+
+# Define permissions
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    # Checkout the repository code
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Set up JDK 17
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'adopt'
+
+    # Set up Maven
+    - name: Set up Maven
+      uses: stCarolas/setup-maven@v5
+      with:
+        maven-version: '3.6.3'
+
+    # Replace properties in application configuration files
+    - name: Replace properties
+      working-directory: microservices/src/main/resources
+      env:
+        AZURE_DEV_JDBC_URL: ${{ secrets.AZURE_DEV_JDBC_URL }}
+        AZURE_TST_JDBC_URL: ${{ secrets.AZURE_TST_JDBC_URL }}
+        AZURE_STG_JDBC_URL: ${{ secrets.AZURE_STG_JDBC_URL }}
+        AZURE_PRD_JDBC_URL: ${{ secrets.AZURE_PRD_JDBC_URL }}
+        AZURE_DB_LOGIN_ID: ${{ secrets.AZURE_DB_LOGIN_ID }}
+        AZURE_DB_LOGIN_PASS: ${{ secrets.AZURE_DB_LOGIN_PASS }}
+      run: |
+        ENVIRONMENT="${{ inputs.environment }}"
+        ENVIRONMENT_UPPER=$(echo "$ENVIRONMENT" | tr '[:lower:]' '[:upper:]')
+        JDBC_URL_VAR="AZURE_${ENVIRONMENT_UPPER}_JDBC_URL"
+        JDBC_URL="${!JDBC_URL_VAR}"
+        
+        # Update JDBC URL and database credentials in application.properties
+        echo "spring.datasource.url=$JDBC_URL" >> application.properties
+        echo "spring.datasource.username=$AZURE_DB_LOGIN_ID@leanix-${{ inputs.environment }}-sql" >> application.properties
+        echo "spring.datasource.password=$AZURE_DB_LOGIN_PASS" >> application.properties
+
+    # Upload artifact properties
+    - name: Upload artifact props
+      uses: actions/upload-artifact@v4
+      with:
+        name: prop
+        path:  microservices/src/main/resources
+
+    # Build the application with Maven
+    - name: Build with Maven
+      run: mvn -f microservices/pom.xml package
+      
+    # Upload built artifact
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: jarpackage
+        path: microservices/target/*.jar
+
+  deploy:
+    # This job depends on the successful completion of the 'build' job
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout the repository code
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Download the built artifact
+    - name: Download artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: jarpackage
+        
+    # Login to Azure using OIDC to run az cli
+    - uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    # Deploy the application to Azure WebApp
+    - name: Azure WebApp
+      uses: Azure/webapps-deploy@v3
+      with:
+        app-name: ${{ inputs.environment }}leanixtodoapp
+        package: "*.jar"

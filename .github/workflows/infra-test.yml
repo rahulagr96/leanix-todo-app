@@ -1,0 +1,62 @@
+name: Todo App Test
+
+# Trigger the workflow manually
+on:
+  workflow_dispatch:
+    inputs:  
+      environment:
+        description: Select the environment
+        type: choice
+        default: prd
+        options:
+          - prd
+
+env:
+  testurl: https://${{ inputs.environment }}leanixtodoapp.azurewebsites.net/api/todos       
+
+jobs:
+  testing:
+    name: Todo App Test
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Health Check
+      run: |
+        curl -X GET "$testurl/health"
+
+    - name: Posting a new todo
+      run: |
+        curl -X POST -H "Content-Type: application/json" -d '{"title": "shop in kaufland", "description": "egg, milk"}' "$testurl"
+
+    - name: Posting a new todo
+      run: |
+        curl -X POST -H "Content-Type: application/json" -d '{"title": "book flight", "description": "try kiwi"}' "$testurl"
+
+    - name: Get all todo
+      run: |
+        curl -X GET "$testurl"
+
+    - name: Updating todo with ID 1
+      run: |
+        curl -X PUT -H "Content-Type: application/json" -d '{"title": "train tickets", "description": "buy at the station"}' "$testurl/1"
+
+    - name: Get all todo
+      run: |
+        echo "Getting all todos after update:"
+        curl -X GET "$testurl"
+
+    - name: Deleting todo with ID 1
+      run: |
+        curl -X DELETE "$testurl/1"
+
+    - name: Posting a new todo
+      run: |
+        curl -X POST -H "Content-Type: application/json" -d '{"title": "call mom", "description": "call in evening"}' "$testurl"
+
+    - name: Get todo of id 2
+      run: |
+         curl -X GET "$testurl/2"
