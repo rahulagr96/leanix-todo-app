@@ -98,6 +98,13 @@ project
 9. Test the app's CRUD operation using curl (refer to the `infra-test.yml` pipeline).
 10. Check the changes in azure db
 
+## Add a new envionment
+1. Update [infra-app.yml](https://github.com/rahulagr96/leanix-todo-app/blob/main/.github/workflows/infra-app.yml) and add environment name in `workflow_dispatch` (like `dev`, `tst`, `stg`)
+2. Update [app-release-manual.yml](https://github.com/rahulagr96/leanix-todo-app/blob/main/.github/workflows/app-release-manual.yml) for deploymnet.
+3. Run `infra-app` with the new environment.
+4. Create a github secret for DB url (e.g. AZURE_`env name`_JDBC_URL) without the username and password field in url.
+5. Run `app-release-manual` to deploy to desired environment.
+
 ## Reasons for Choosing the Described Architecture
 Choosing this architecture has several advantages:
 
