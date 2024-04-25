@@ -65,10 +65,20 @@ project
 6. `infra-test` [![Todo App Test](https://github.com/rahulagr96/leanix-todo-app/actions/workflows/infra-test.yml/badge.svg?branch=main)](https://github.com/rahulagr96/leanix-todo-app/actions/workflows/infra-test.yml)
    - Performs CRUD operation to test the application
 
+## Add a new envionment
+1. Update [infra-app.yml](https://github.com/rahulagr96/leanix-todo-app/blob/main/.github/workflows/infra-app.yml) and add environment name in `workflow_dispatch` (like `dev`, `tst`, `stg`)
+2. Update [app-release-manual.yml](https://github.com/rahulagr96/leanix-todo-app/blob/main/.github/workflows/app-release-manual.yml) for deploymnet.
+3. Run `infra-app` with the new environment.
+4. Create a github secret for DB url (e.g. AZURE_`env name`_JDBC_URL) without the username and password field in url.
+5. Run `app-release-manual` to deploy to desired environment.
+   
+## Diagram
+![diagram](.images/diagram.png)
+
 ## Prerequisites
 
 - Java JDK 11 or newer
-- Maven (if using `pom.xml`)
+- Maven (using `pom.xml`)
 - An Azure account with an active subscription
 - Terraform installed on your local machine
 
@@ -77,7 +87,7 @@ project
 
 1. Create an Azure Account
 2. Create a role assignment
-3. Perform `az login`
+3. Export env vars (check `infra-app.yml`).
 4. Clone the repository:
 
    ``` bash
@@ -97,13 +107,6 @@ project
 8. Run the spring boot app using `mvn spring-boot:run`
 9. Test the app's CRUD operation using curl (refer to the `infra-test.yml` pipeline).
 10. Check the changes in azure db
-
-## Add a new envionment
-1. Update [infra-app.yml](https://github.com/rahulagr96/leanix-todo-app/blob/main/.github/workflows/infra-app.yml) and add environment name in `workflow_dispatch` (like `dev`, `tst`, `stg`)
-2. Update [app-release-manual.yml](https://github.com/rahulagr96/leanix-todo-app/blob/main/.github/workflows/app-release-manual.yml) for deploymnet.
-3. Run `infra-app` with the new environment.
-4. Create a github secret for DB url (e.g. AZURE_`env name`_JDBC_URL) without the username and password field in url.
-5. Run `app-release-manual` to deploy to desired environment.
 
 ## Reasons for Choosing the Described Architecture
 Choosing this architecture has several advantages:
