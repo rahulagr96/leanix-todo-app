@@ -49,6 +49,6 @@ public class TodoController {
     // Health check endpoint
     @GetMapping("/health")
     public String healthCheck() {
-        return "Health Check: Green";
+        return "Health Check: App is Green";
     }
 }
