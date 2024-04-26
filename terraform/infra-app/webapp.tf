@@ -22,6 +22,8 @@ resource "azurerm_linux_web_app" "todoapp" {
   # Configuration settings for the web app
   site_config {
     ftps_state = "FtpsOnly"
+    health_check_path = "/api/todos/health"
+    health_check_eviction_time_in_min = 5
 
     application_stack {
       java_version        = "17"
